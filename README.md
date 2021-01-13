@@ -13,7 +13,7 @@ arrive so it so it can publish it.
 
 - Parse TextBundle
 - Post to Github
-- Do a Telegram bot
+- Do a Telegram bot (webhook url `https://pubbler.ngrok.io/telegram`)
 - Store some conf for users
 - ???
 - Profit!
