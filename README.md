@@ -11,9 +11,9 @@ arrive so it so it can publish it.
 ## Roadmap
 
 
-- Parse TextBundle
-- Post to Github
-- Do a Telegram bot (webhook url `https://pubbler.ngrok.io/telegram`)
-- Store some conf for users
-- ???
-- Profit!
+- [x] Parse TextBundle
+- [x] Post to Github
+- [ ] Do a Telegram bot (webhook url `https://pubbler.ngrok.io/telegram`)
+- [ ] Store some conf for users
+- [ ] ???
+- [ ] Profit!

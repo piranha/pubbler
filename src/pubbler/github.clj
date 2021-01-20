@@ -9,20 +9,17 @@
   (:import [java.security MessageDigest]))
 
 
-(def BASE "https://api.github.com")
-
 (def sha1enc (MessageDigest/getInstance "SHA-1"))
 
 
 (def BLOB (.getBytes "blob "))
 
 
-(defn read-ba [file]
-  (let [ary (byte-array (.length file))
-        is  (io/input-stream file)]
-  (.read is ary)
-  (.close is)
-  ary))
+(defn stream->bytes [is]
+  (loop [b (.read is) accum []]
+    (if (< b 0)
+      accum
+      (recur (.read is) (conj accum b)))))
 
 
 (defn git-sha1 [ba]
@@ -39,7 +36,7 @@
 
 (defn req [method url data]
   @(http/request
-     {:url     (str BASE url)
+     {:url     (str "https://api.github.com" url)
       :method  method
       :headers {"Accept"        "application/vnd.github.v3+json"
                 "Authorization" (str "token " (slurp "/Users/piranha/github-token"))}
@@ -60,16 +57,15 @@
                        :content content}))))
 
 
-(defn upload-tb! [bundle-path opts]
-  (let [bundle (bundle/read bundle-path (:asset-path opts))]
-    (when-not (:slug bundle)
-      (throw (ex-info "Cannot guess path to upload your TextBundle"
-               {:text (:text bundle)})))
-    (doseq [{:keys [link file]} (:files bundle)]
-      (update-file! link (read-ba file)))
-    (update-file!
-      (str (:slug bundle)  ".md")
-      (.getBytes (:text bundle) "UTF-8"))))
+(defn upload-tb! [bundle]
+  (when-not (:slug bundle)
+    (throw (ex-info "Cannot guess path to upload your TextBundle"
+             {:text (:text bundle)})))
+  (doseq [{:keys [link file]} (:files bundle)]
+    (update-file! link (stream->bytes file)))
+  (update-file!
+    (str (:slug bundle)  ".md")
+    (.getBytes (:text bundle) "UTF-8")))
 
 
 
@@ -86,7 +82,8 @@
 
   (git-sha1 "just a test")
 
-  (upload-tb! "/Users/piranha/qqq.textbundle/" {:asset-path "src/media/"})
+  (upload-tb!
+    (bundle/read (io/input-stream (io/file "/Users/piranha/1/1.zip")) "src/media/"))
 
 
   )
