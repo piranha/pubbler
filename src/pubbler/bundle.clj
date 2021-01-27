@@ -1,9 +1,11 @@
 (ns pubbler.bundle
+  (:refer-clojure :exclude [read])
   (:import [java.util.zip ZipFile]
            [java.io File])
   (:require [clojure.java.io :as io]
             [ring.util.codec :as codec]
             [clojure.string :as str]))
+
 
 (def BEAR-DIV "\n---\n")
 (def GOSTATIC-DIV "\n----\n")
@@ -40,7 +42,9 @@
 
 (defn map-assets [text target]
   #_(str/replace text #"!\[([^\]]*)\]\(assets/" (str "![$1](" target))
-  (str/replace text #"(?m)^\[assets/(.*)\]$" (format "![](%s$1)" target)))
+  (str/replace text #"(?m)^\[assets/(.*)\]$"
+    (fn [link]
+      (format "![](%s%s)" target (codec/form-encode link)))))
 
 
 (defn determine-prefix [zip-file]
@@ -69,8 +73,9 @@
         ;; links (re-seq #"!\[.*?\]\(([^)]+)\)" text)
         links    (re-seq #"(?m)^\[(assets/.+)\]$" text)
         files    (for [[_ link] links
-                       :let     [fp (codec/percent-decode link)]]
-                   {:link (str/replace link "assets/" asset-path)
+                       :let     [fp link]]
+                   {:link (codec/percent-encode
+                            (str/replace link "assets/" asset-path))
                     :file (zip-entry zip-file (str prefix fp))})
         bundle   (parse-text text)]
     (-> bundle

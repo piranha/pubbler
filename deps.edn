@@ -1,23 +1,32 @@
 {:paths ["src" "resources"]
  :deps
- {org.clojure/clojure    {:mvn/version "1.10.2-rc1"}
-  ring/ring-core         {:mvn/version "1.8.1"}
-  http-kit/http-kit      {:mvn/version "2.5.0"}
-  mount/mount            {:mvn/version "0.1.16"}
-  hiccup/hiccup          {:mvn/version "1.0.5"}
-  org.slf4j/slf4j-api    {:mvn/version "1.7.30"}
-  org.slf4j/slf4j-simple {:mvn/version "1.7.30"}
-  com.brunobonacci/mulog {:mvn/version "0.6.2"}
-  metosin/jsonista       {:mvn/version "0.2.7"}}
+ {org.clojure/clojure     {:mvn/version "1.10.2-rc1"}
+  ring/ring-core          {:mvn/version "1.8.2"}
+  http-kit/http-kit       {:mvn/version "2.5.1"}
+  mount/mount             {:mvn/version "0.1.16"}
+  hiccup/hiccup           {:mvn/version "1.0.5"}
+  org.slf4j/slf4j-api     {:mvn/version "1.7.30"}
+  org.slf4j/slf4j-simple  {:mvn/version "1.7.30"}
+  com.brunobonacci/mulog  {:mvn/version "0.6.4"}
+  metosin/jsonista        {:mvn/version "0.3.0"}
+  better-cond/better-cond {:mvn/version "2.1.0"}
+
+  seancorfield/next.jdbc    {:mvn/version "1.1.613"}
+  org.postgresql/postgresql {:mvn/version "42.2.18"}
+  com.zaxxer/HikariCP       {:mvn/version "4.0.1"}
+  honeysql/honeysql         {:mvn/version "1.0.444"}
+  nilenso/honeysql-postgres {:mvn/version "0.2.6"}
+
+  oauth/oauth.two {:mvn/version "0.4.0"}}
 
  :aliases
- {:dev {:extra-deps {nrepl/nrepl                   {:mvn/version "0.7.0"}
-                     cider/cider-nrepl             {:mvn/version "0.25.6"}
+ {:dev {:extra-deps {nrepl/nrepl                   {:mvn/version "0.8.3"}
+                     cider/cider-nrepl             {:mvn/version "0.25.8"}
                      refactor-nrepl/refactor-nrepl {:mvn/version "2.5.0"}
                      clj-commons/pomegranate       {:mvn/version "1.2.0"}}
         :main-opts  ["-i dev/user.clj"
                      "-m nrepl.cmdline -i"
                      "--middleware [\"cider.nrepl/cider-middleware\",\"refactor-nrepl.middleware/wrap-refactor\"]"]}
 
-  :ancient {:extra-deps {olical/depot {:mvn/version "1.8.4"}}
-            :main-opts  ["-m" "depot.outdated.main"]}}}
+  :ancient {:extra-deps {antq/antq {:mvn/version "RELEASE"}}
+            :main-opts  ["-m" "antq.core"]}}}
