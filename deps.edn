@@ -1,15 +1,16 @@
 {:paths ["src" "resources"]
  :deps
- {org.clojure/clojure     {:mvn/version "1.10.2-rc1"}
-  ring/ring-core          {:mvn/version "1.8.2"}
-  http-kit/http-kit       {:mvn/version "2.5.1"}
-  mount/mount             {:mvn/version "0.1.16"}
-  hiccup/hiccup           {:mvn/version "1.0.5"}
-  org.slf4j/slf4j-api     {:mvn/version "1.7.30"}
-  org.slf4j/slf4j-simple  {:mvn/version "1.7.30"}
-  com.brunobonacci/mulog  {:mvn/version "0.6.4"}
-  metosin/jsonista        {:mvn/version "0.3.0"}
-  better-cond/better-cond {:mvn/version "2.1.0"}
+ {org.clojure/clojure        {:mvn/version "1.10.2-rc1"}
+  ring/ring-core             {:mvn/version "1.8.2"}
+  http-kit/http-kit          {:mvn/version "2.5.1"}
+  mount/mount                {:mvn/version "0.1.16"}
+  hiccup/hiccup              {:mvn/version "1.0.5"}
+  org.slf4j/slf4j-api        {:mvn/version "1.7.30"}
+  org.slf4j/slf4j-simple     {:mvn/version "1.7.30"}
+  com.brunobonacci/mulog     {:mvn/version "0.6.4"}
+  metosin/jsonista           {:mvn/version "0.3.0"}
+  better-cond/better-cond    {:mvn/version "2.1.0"}
+  org.clojure/core.incubator {:mvn/version "0.1.4"}
 
   seancorfield/next.jdbc    {:mvn/version "1.1.613"}
   org.postgresql/postgresql {:mvn/version "42.2.18"}

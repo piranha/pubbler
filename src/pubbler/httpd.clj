@@ -1,9 +1,9 @@
 (ns pubbler.httpd
-  (:require [org.httpkit.server :as httpd]
-            [mount.core :as mount]
-            [ring.util.codec :as codec]
+  (:require [clojure.walk :as walk]
             [better-cond.core :as b]
-            [clojure.walk :as walk]
+            [mount.core :as mount]
+            [org.httpkit.server :as httpd]
+            [ring.util.codec :as codec]
 
             [pubbler.config :as config]
             [pubbler.auth :as auth]
@@ -38,9 +38,7 @@
 
     :done
     (do
-      (telegram/reply (:chat_id user)
-        (format "Hey %s, please tell me your target repo name" (:github user))
-        {:forcereply true})
+      (telegram/start-setup {:chat {:id (:chat_id user)}})
       {:status 200
        :body "Authenticated successfully! Please check your Telegram chat."})))
 

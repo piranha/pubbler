@@ -5,7 +5,7 @@
             [org.httpkit.sni-client :as sni-client]
 
             [pubbler.telegram :as telegram]
-            [pubbler.httpd :as httpd]))
+            [pubbler.httpd]))
 
 
 (alter-var-root #'http/*default-client* (fn [_] sni-client/default-client))

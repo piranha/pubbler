@@ -45,6 +45,18 @@
      ~@body))
 
 
+(defn get-user-q [id]
+  {:from   [:users]
+   :select [:github
+            :access_token
+            :chat_id
+            :telegram
+            :repo
+            :path
+            :mapping]
+   :where  [:= :github id]})
+
+
 (defn store-user-q [info state]
   {:insert-into :users
    :values      [{:github       (:login info)
@@ -52,11 +64,7 @@
                   :chat_id      (:chat_id state)
                   :telegram     (:telegram state)
                   :updated_at   (db/call :now)}]
-   :returning   [:github
-                 :access_token
-                 :chat_id
-                 :telegram
-                 :repo]
+   :returning   (:select (get-user-q nil))
    :upsert      {:on-conflict   [:github]
                  :do-update-set [:access_token :chat_id :telegram :updated_at]}})
 
@@ -73,6 +81,9 @@
 
 
 (defn user-by-chat [id]
-  (db/one {:from   [:users]
-           :select [:github :access_token :chat_id :telegram :repo]
-           :where  [:= :chat_id (str id)]}))
+  (db/one (assoc (get-user-q nil)
+            :where [:= :chat_id (str id)])))
+
+
+(defn user-by-github [login]
+  (db/one (get-user-q login)))

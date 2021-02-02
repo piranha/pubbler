@@ -1,6 +1,6 @@
 (ns pubbler.telegram
   (:require [clojure.string :as str]
-            [ring.util.codec :as codec]
+            [clojure.core.strint :refer [<<]]
             [com.brunobonacci.mulog :as u]
             [org.httpkit.client :as http]
             [jsonista.core :as json]
@@ -39,7 +39,8 @@
                  :body
                  (json/read-value json/keyword-keys-object-mapper))]
     (if (:error_code data)
-      (throw (ex-info (:description data) {:response res}))
+      (throw (ex-info (:description data) {:data     data
+                                           :response res}))
       (with-meta data {:response res}))))
 
 
@@ -53,47 +54,69 @@
 
 
 (defn reply [message text & [{:keys [nopreview
-                                     forcereply]}]]
+                                     forcereply
+                                     edit]}]]
   (let [chat-id (if (map? message)
                   (-> message :chat :id)
                   message)
         opts    (cond-> {:chat_id    chat-id
+                         :message_id edit
                          :parse_mode "HTML"
                          :text       text}
                   nopreview  (assoc :disable_web_page_preview true)
                   forcereply (assoc :reply_markup {:force_reply true}))]
-    (u/log ::reply :chat-id chat-id :text text)
-    (req! :post "sendMessage" opts)))
+    (u/log ::reply :opts opts)
+    (if (:message_id opts)
+      (req! :post "editMessageText" opts)
+      (req! :post "sendMessage" opts))))
+
+
+(defn parse-mapping [mapping]
+  (let [[pat dest] (str/split mapping #"=>" 2)]
+    [(re-pattern (str/trim pat))
+     (str/trim dest)]))
 
 
 ;;; logic
 
 (defn process-bundle [message]
-  (auth/with-user (auth/user-by-chat (-> message :chat :id))
-    (let [start (System/currentTimeMillis)
+  (let [progress (reply message "<i>Starting upload...</i>")
+        msgid    (-> progress :result :message_id)
 
-          file-id  (-> message :document :file_id)
-          filemeta (req! :get "getFile" {:file_id file-id})
+        start (System/currentTimeMillis)
+        user  github/*user*
 
-          zip    (:body (req-file! (-> filemeta :result :file_path)))
-          bundle (bundle/read zip "src/media/")
+        file-id  (-> message :document :file_id)
+        filemeta (req! :get "getFile" {:file_id file-id})
 
-          results (github/upload-tb! bundle)
-          _       (u/log ::published :results results)
+        zip    (:body (req-file! (-> filemeta :result :file_path)))
+        bundle (bundle/read zip)
 
-          duration (- (System/currentTimeMillis) start)
-          report   (if (empty? results)
-                     (format "nothing changed, %s ms"
-                       duration)
-                     (format "successfully published %s files at [%s](%s) in %s ms"
-                       (count results)
-                       (-> results last :commit :sha)
-                       (-> results last :content :html_url)
-                       duration))]
-      (reply message report))))
+        [path updates] (github/upload-tb! bundle)
+        post-url       (when (:mapping user)
+                         (apply str/replace path
+                           (parse-mapping (:mapping user))))
+        _              (doseq [[link _] updates]
+                         (reply message (<< "<code>~{link}</code> done")
+                           {:nopreview true
+                            :edit      msgid}))
+        gh-url         (-> updates last second :content :html_url)
+        _              (u/log ::published :results updates)
+
+        duration (- (System/currentTimeMillis) start)
+        report   (str
+                   (when post-url
+                     (<< "<a href=\"~{post-url}\">~(:slug bundle)</a>. "))
+                   (if (empty? (filter second updates))
+                     "Nothing changed"
+                     (<< "Successfully <a href=\"~{gh-url}\">published</a> ~(count (filter second updates)) files"))
+                   (<< "\n~{duration} ms"))]
+    (reply message report
+      {:nopreview true
+       :edit      msgid})))
 
 
-(defn process-start [message]
+(defn start-auth [message]
   (let [url (auth/oauth-url {:chat_id  (-> message :chat :id)
                              :telegram (-> message :chat :username)})]
     (reply message
@@ -101,37 +124,87 @@
       {:nopreview true})))
 
 
+(defn start-setup [message]
+  (let [user github/*user*]
+    (reply (-> message :chat :id)
+      (str (<< "Hey ~(:github user)!")
+        (when (or (:repo user) (:path user))
+          (<< " Your current settings: repo - <code>~(:repo user)</code>, path - <code>~(:path user)</code>."))
+         " Please tell me your target repo name.")
+      {:forcereply true})))
+
+
 (defn process-repo [message]
-  (let [user (auth/user-by-chat (-> message :chat :id))
+  (let [user github/*user*
         repo (:text message)
-        info (auth/with-user user
-               (github/req! :get (format "/repos/%s/%s" (:github user) repo) nil))]
+        info (github/req! :get (<< "/repos/~(:github user)/~{repo}") nil)]
     (if info
       (do
         (db/one {:update :users
                  :set    {:repo (:name info)}
                  :where  [:= :github (:github user)]})
         (reply message
-          "Success! Now send me compressed TextBundles so I can publish them for you!"))
+          (<<  "Okay, so it's <a href=\"https://github.com/~(:github user)/~{repo}\">~(:github user)/~{repo}</a>.
+Please now tell me <b>where to put your posts</b> (and images), i.e. <code>src/blog/%Y</code>. Note that you can use <a href=\"https://man7.org/linux/man-pages/man3/strftime.3.html#DESCRIPTION\">strftime</a> date formatting here.")
+          {:forcereply true}))
       (reply message
-        (format "Could not find repo with name %s/%s" (:github user) repo)))))
+        "Could not find repo with name ~(:github user)/~{repo}"))))
 
 
-(defn reply-to? [message pattern]
+(defn process-path [message]
+  (let [user github/*user*
+        path (:text message)]
+    (db/one {:update :users
+             :set    {:path path}
+             :where  [:= :github (:github user)]})
+    (reply message
+      (<<  "Okay, it's <code>~{path}</code>. Note: you can reply to any question again to change your setting.
+Now send me those Bear notes so I can post them for you!
+
+Also, an optional step: if you send a <b>mapping</b> from source path to an url I'll send you generated url on every update. Format should be <code>src/(.*) => https://solovyov.net/$1</code> - you can use regular expressions, obviously. Argument passed for replacement will be in a form <code>~{path}/{slug}/</code>.")
+      {:forcereply true})))
+
+
+(defn process-mapping [message]
+  (let [user    github/*user*
+        mapping (:text message)]
+    (try
+      (parse-mapping mapping)
+      (db/one {:update :users
+               :set    {:mapping mapping}
+               :where  [:= :github (:github user)]})
+      (reply message
+        (<< "Cool! Your mapping is <code>~{mapping}</code> now. Bring those notes here!"))
+      (catch Exception e
+        (reply message
+          (<< "Couldn't parse your mapping: ~(str e)
+Please fix it!")
+          {:forcereply true})))))
+
+
+(defn reply-to? [message re]
   (and (:reply_to_message message)
        (->> message
             :reply_to_message
             :text
-            (re-find (re-pattern (format "\\b%s\\b" pattern))))))
+            (re-find re))))
 
 
 (defn process-update [upd]
   (u/log ::process :data upd)
-  (let [message (:message upd)]
-    (cond
-      (-> message :document :file_id) (process-bundle message)
-      (= (-> message :text) "/start") (process-start message)
-      (reply-to? message "repo")      (process-repo message))))
+  (let [message (:message upd)
+        user    (auth/user-by-chat (-> message :chat :id))]
+    (auth/with-user user
+      (cond
+        (-> message :document :file_id)                (process-bundle message)
+        (= (-> message :text) "/start")                (start-auth message)
+        (= (-> message :text) "/setup")                (start-setup message)
+        (reply-to? message #"\brepo\b")                (process-repo message)
+        (reply-to? message #"where to put your posts") (process-path message)
+        (reply-to? message #"mapping")                 (process-mapping message)
+        :else
+        (reply message
+          "Can't understand you. Please reply to a question or, if you want to restart, send <code>/setup</code>")))))
 
 
 (defn get-updates-or-else [update-id]
