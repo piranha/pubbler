@@ -6,6 +6,9 @@ run: export GHSECRET = $(shell cat .tokens/ghsecret)
 run:
 	clj -A:dev
 
+compile:
+	clojure -Srepro -A:native
+
 ancient:
 	clojure -A:dev:ancient
 

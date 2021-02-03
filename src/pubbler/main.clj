@@ -1,4 +1,5 @@
 (ns pubbler.main
+  (:gen-class)
   (:require [mount.core :as mount]
             [com.brunobonacci.mulog :as u]
             [org.httpkit.client :as http]

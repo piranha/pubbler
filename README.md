@@ -8,12 +8,15 @@ Right now it's a chat bot for Telegram which sits there and waits for a file to
 arrive so it so it can publish it.
 
 
-## Roadmap
+## Configuration
 
+Set environment variables to configure application:
 
-- [x] Parse TextBundle
-- [x] Post to Github
-- [ ] Do a Telegram bot (webhook url `https://pubbler.ngrok.io/telegram`)
-- [ ] Store some conf for users
-- [ ] ???
-- [ ] Profit!
+| var      | Description                    |
+|----------|--------------------------------|
+| PORT     | Port to run on (default: 9000) |
+| DOMAIN   | Domain application will run on |
+| TGTOKEN  | Telegram bot token             |
+| PGURL    | Postgres URL to connect to     |
+| GHID     | Github application id          |
+| GHSECRET | Github application secret      |

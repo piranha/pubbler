@@ -1,6 +1,6 @@
 {:paths ["src" "resources"]
  :deps
- {org.clojure/clojure        {:mvn/version "1.10.2-rc1"}
+ {org.clojure/clojure        {:mvn/version "1.10.2"}
   ring/ring-core             {:mvn/version "1.8.2"}
   http-kit/http-kit          {:mvn/version "2.5.1"}
   mount/mount                {:mvn/version "0.1.16"}
@@ -8,7 +8,7 @@
   org.slf4j/slf4j-api        {:mvn/version "1.7.30"}
   org.slf4j/slf4j-simple     {:mvn/version "1.7.30"}
   com.brunobonacci/mulog     {:mvn/version "0.6.4"}
-  metosin/jsonista           {:mvn/version "0.3.0"}
+  metosin/jsonista           {:mvn/version "0.3.1"}
   better-cond/better-cond    {:mvn/version "2.1.0"}
   org.clojure/core.incubator {:mvn/version "0.1.4"}
 
@@ -28,6 +28,23 @@
         :main-opts  ["-i dev/user.clj"
                      "-m nrepl.cmdline -i"
                      "--middleware [\"cider.nrepl/cider-middleware\",\"refactor-nrepl.middleware/wrap-refactor\"]"]}
+
+  :native {:main-opts ["-m clj.native-image pubbler.main"
+                       ;; "--language:js"
+                       ;; optional native image name override
+                       "-H:Name=pubbler"
+                       "-H:+ReportExceptionStackTraces"
+                       "-H:+RemoveSaturatedTypeFlows"
+                       ;; "-H:ResourceConfigurationFiles=resource-config.json"
+                       "--initialize-at-build-time"
+                       "--report-unsupported-elements-at-runtime"
+                       "--no-server"]
+           :jvm-opts  ["-Dclojure.compiler.direct-linking=true"
+                       "-Dclojure.spec.skip-macros=true"]
+           :extra-deps
+           {clj.native-image/clj.native-image
+            {:git/url "https://github.com/taylorwood/clj.native-image.git"
+             :sha     "f3e40672d5c543b80a2019c1f07b2d3fe785962c"}}}
 
   :ancient {:extra-deps {antq/antq {:mvn/version "RELEASE"}}
             :main-opts  ["-m" "antq.core"]}}}
