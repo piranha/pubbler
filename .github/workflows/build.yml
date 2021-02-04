@@ -21,7 +21,7 @@ jobs:
         graalvm-version: '21.0.0.java11'
     - uses: DeLaGuardo/setup-clojure@master
       with:
-        tools-deps: '1.10.1.763'
+        tools-deps: '1.10.2.774'
     - run: gu install native-image
     - run: make compile
     - uses: svenstaro/upload-release-action@v2
@@ -29,4 +29,5 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: pubbler
         asset_name: pubbler-linux-amd64
-        tag: ${{ github.sha }}
+        tag: ${{ github.ref }}
+        overwrite: true
