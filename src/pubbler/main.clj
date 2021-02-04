@@ -1,20 +1,16 @@
 (ns pubbler.main
   (:gen-class)
   (:require [mount.core :as mount]
-            [com.brunobonacci.mulog :as u]
             [org.httpkit.client :as http]
             [org.httpkit.sni-client :as sni-client]
 
+            [pubbler.log :as log]
             [pubbler.telegram :as telegram]
             [pubbler.httpd]))
 
 
 (alter-var-root #'http/*default-client* (fn [_] sni-client/default-client))
-
-
-(mount/defstate logger
-  :start (u/start-publisher! {:type :console :pretty? true})
-  :stop (logger))
+(log/conf! {:logger (log/->Stdout)})
 
 
 (mount/defstate poller

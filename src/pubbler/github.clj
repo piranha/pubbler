@@ -2,11 +2,11 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.core.strint :refer [<<]]
-            [com.brunobonacci.mulog :as u]
             [ring.util.codec :as codec]
             [org.httpkit.client :as http]
             [jsonista.core :as json]
 
+            [pubbler.log :as log]
             [pubbler.bundle :as bundle]
             [pubbler.core.time :as time])
   (:import [java.security MessageDigest]))
@@ -79,7 +79,7 @@
   (let [glink    (<< "/repos/~(:github *user*)/~(:repo *user*)/contents/~{path}/~(codec/url-encode name)")
         info     (first (filter #(= (:path %) name) tree))
         orig-sha (:sha info)]
-    (u/log ::file :target (join path name) :sha orig-sha)
+    (log/info "file" {:target (join path name) :sha orig-sha})
     (when (or (nil? orig-sha)
               (not= orig-sha (git-sha1 content)))
       (req! :put glink {:message (<< "Updating ~{path}/~{name}")
@@ -91,11 +91,10 @@
   (when-not (:slug bundle)
     (throw (ex-info "Cannot guess path to upload your TextBundle"
              {:text (:text bundle)})))
-  (u/log ::upload
-    :slug (:slug bundle)
-    :date (:date bundle)
-    :path (:path *user*)
-    :repo (:repo *user*))
+  (log/info "upload" {:slug (:slug bundle)
+                      :date (:date bundle)
+                      :path (:path *user*)
+                      :repo (:repo *user*)})
   (let [path (join
                (time/strftime (:path *user*) (:date bundle))
                (:slug bundle))

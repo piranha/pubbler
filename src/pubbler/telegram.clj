@@ -1,10 +1,10 @@
 (ns pubbler.telegram
   (:require [clojure.string :as str]
             [clojure.core.strint :refer [<<]]
-            [com.brunobonacci.mulog :as u]
             [org.httpkit.client :as http]
             [jsonista.core :as json]
 
+            [pubbler.log :as log]
             [pubbler.config :as config]
             [pubbler.bundle :as bundle]
             [pubbler.github :as github]
@@ -65,7 +65,7 @@
                          :text       text}
                   nopreview  (assoc :disable_web_page_preview true)
                   forcereply (assoc :reply_markup {:force_reply true}))]
-    (u/log ::reply :opts opts)
+    (log/info "reply" opts)
     (if (:message_id opts)
       (req! :post "editMessageText" opts)
       (req! :post "sendMessage" opts))))
@@ -101,7 +101,7 @@
                            {:nopreview true
                             :edit      msgid}))
         gh-url         (-> updates last second :content :html_url)
-        _              (u/log ::published :results updates)
+        _              (log/info "published" {:results updates})
 
         duration (- (System/currentTimeMillis) start)
         report   (str
@@ -191,7 +191,7 @@ Please fix it!")
 
 
 (defn process-update [upd]
-  (u/log ::process :data upd)
+  (log/info ::process upd)
   (let [message (:message upd)
         user    (auth/user-by-chat (-> message :chat :id))]
     (auth/with-user user
@@ -223,9 +223,9 @@ Please fix it!")
         t    (Thread.
                (fn []
                  (loop [update-id nil]
-                   (u/log ::poll :update-id update-id)
+                   (log/debug "poll" {:update-id update-id})
                    (if @stop
-                     (u/log ::stop)
+                     (log/info "stop")
                      (let [updates (get-updates-or-else update-id)
                            new-id  (-> updates :result last :update_id)]
                        (run! process-update (:result updates))

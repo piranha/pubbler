@@ -7,7 +7,6 @@
   hiccup/hiccup              {:mvn/version "1.0.5"}
   org.slf4j/slf4j-api        {:mvn/version "1.7.30"}
   org.slf4j/slf4j-simple     {:mvn/version "1.7.30"}
-  com.brunobonacci/mulog     {:mvn/version "0.6.4"}
   metosin/jsonista           {:mvn/version "0.3.1"}
   better-cond/better-cond    {:mvn/version "2.1.0"}
   org.clojure/core.incubator {:mvn/version "0.1.4"}
