@@ -9,7 +9,8 @@
             [pubbler.config :as config]
             [clojure.string :as str])
   (:import [java.net URI]
-           [com.zaxxer.hikari HikariConfig HikariDataSource]))
+           [com.zaxxer.hikari HikariConfig HikariDataSource]
+           [org.postgresql.ds PGSimpleDataSource]))
 
 
 (set! *warn-on-reflection* true)
@@ -24,21 +25,16 @@
 
 (defn make-pool [url]
   (let [uri        (URI. url)
-        ;; Hikari does not support user/password in url :(
-        jdbc-url   (format "jdbc:%s://%s:%s%s"
-                     (let [scheme (.getScheme uri)]
-                       (if (= scheme "postgres")
-                         "postgresql"
-                         scheme))
-                     (.getHost uri)
-                     (.getPort uri)
-                     (.getPath uri))
-        init-sql   "SET application_name TO 'pubbler'"
         [user pwd] (str/split (.getUserInfo uri) #":")
+        ds         (doto (PGSimpleDataSource.)
+                     (.setServerName (.getHost uri))
+                     (.setPortNumber (.getPort uri))
+                     (.setDatabaseName (.substring (.getPath uri) 1))
+                     (.setUser user)
+                     (.setPassword pwd))
+        init-sql   "SET application_name TO 'pubbler'"
         config     (doto (HikariConfig.)
-                     (.setJdbcUrl jdbc-url)
-                     (.setUsername user)
-                     (.setPassword pwd)
+                     (.setDataSource ds)
                      (.setMaximumPoolSize 3)
                      (.setConnectionTimeout 5000)
                      (.setRegisterMbeans true)
