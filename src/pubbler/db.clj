@@ -48,7 +48,7 @@
 
 
 (mount/defstate conn
-  :start (make-pool config/PGURL)
+  :start (make-pool (config/PGURL))
   :stop (.close ^HikariDataSource conn))
 
 

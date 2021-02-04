@@ -1,7 +1,6 @@
 (ns pubbler.auth
   (:require [oauth.two :as oauth]
             [org.httpkit.client :as http]
-            [jsonista.core :as json]
 
             [pubbler.config :as config]
             [pubbler.db :as db]
@@ -10,8 +9,7 @@
 
 
 (defn get-base-url []
-  (str "https://" config/DOMAIN)
-  "https://pubbler.ngrok.io")
+  (str "https://" (config/DOMAIN)))
 
 
 (def gh-client
@@ -20,8 +18,8 @@
      :access-uri    "https://github.com/login/oauth/access_token"
      :redirect-uri  (str (get-base-url) "/oauth/github")
      :scope         ["repo"]
-     :id            config/GHID
-     :secret        config/GHSECRET}))
+     :id            (config/GHID)
+     :secret        (config/GHSECRET)}))
 
 
 (defn oauth-url [state]

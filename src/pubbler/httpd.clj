@@ -51,5 +51,5 @@
 
 
 (mount/defstate server
-  :start (httpd/run-server app {:port config/PORT})
+  :start (httpd/run-server app {:port (config/PORT)})
   :stop (server))

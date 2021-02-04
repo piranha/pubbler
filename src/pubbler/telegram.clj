@@ -29,7 +29,7 @@
   "Make Telegram API calls"
   [method api-name params]
   (let [url  (format "https://api.telegram.org/bot%s/%s"
-               config/TGTOKEN
+               (config/TGTOKEN)
                api-name)
         res  (-req! method url (if (= method :get)
                                  {:query-params params}
@@ -48,7 +48,7 @@
   "Get a file from Telegram"
   [file-path]
   (let [url (format "https://api.telegram.org/file/bot%s/%s"
-              config/TGTOKEN
+              (config/TGTOKEN)
               file-path)]
     (-req! :get url nil)))
 
