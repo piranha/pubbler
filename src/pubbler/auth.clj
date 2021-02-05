@@ -13,21 +13,23 @@
 
 
 (def gh-client
-  (oauth/make-client
-    {:authorize-uri "https://github.com/login/oauth/authorize"
-     :access-uri    "https://github.com/login/oauth/access_token"
-     :redirect-uri  (str (get-base-url) "/oauth/github")
-     :scope         ["repo"]
-     :id            (config/GHID)
-     :secret        (config/GHSECRET)}))
+  (memoize
+    (fn []
+      (oauth/make-client
+        {:authorize-uri "https://github.com/login/oauth/authorize"
+         :access-uri    "https://github.com/login/oauth/access_token"
+         :redirect-uri  (str (get-base-url) "/oauth/github")
+         :scope         ["repo"]
+         :id            (config/GHID)
+         :secret        (config/GHSECRET)}))))
 
 
 (defn oauth-url [state]
-  (oauth/authorization-url gh-client {:state (when (seq state)
-                                               (-> state
-                                                   codec/form-encode
-                                                   (.getBytes "UTF-8")
-                                                   codec/base64-encode))}))
+  (oauth/authorization-url (gh-client) {:state (when (seq state)
+                                                 (-> state
+                                                     codec/form-encode
+                                                     (.getBytes "UTF-8")
+                                                     codec/base64-encode))}))
 
 
 (defn get-access-token! [client code]
@@ -74,7 +76,7 @@
 
 
 (defn auth-user! [code state]
-  (when-let [access-token (get-access-token! gh-client code)]
+  (when-let [access-token (get-access-token! (gh-client) code)]
     (store-user! (assoc state :access_token access-token))))
 
 

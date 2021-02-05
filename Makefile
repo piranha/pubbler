@@ -7,10 +7,10 @@ run:
 	clj -A:dev
 
 compile:
-	clojure -Srepro -A:native
+	clojure -Srepro -A:native -M:native
 
 ancient:
-	clojure -A:dev:ancient
+	clojure -A:dev:ancient -M:ancient
 
 upgrade:
-	clojure -A:dev:ancient --upgrade
+	clojure -A:dev:ancient -M:ancient --upgrade
