@@ -39,6 +39,7 @@
                        ;; hikari imports `com.codahale.metrics`
                        ;; postgres imports `waffle.windows.auth`
                        "--allow-incomplete-classpath"
+                       "--enable-https"
                        "--no-server"]
            :jvm-opts  ["-Dclojure.compiler.direct-linking=true"
                        "-Dclojure.spec.skip-macros=true"]
