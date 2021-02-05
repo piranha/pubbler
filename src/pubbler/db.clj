@@ -9,7 +9,6 @@
             [pubbler.config :as config]
             [clojure.string :as str])
   (:import [java.net URI]
-           [com.zaxxer.hikari HikariConfig HikariDataSource]
            [org.postgresql.ds PGSimpleDataSource]))
 
 
@@ -23,29 +22,20 @@
 (def value honeyfmt/value)
 
 
-(defn make-pool [url]
+(defn make-ds [url]
   (let [uri        (URI. url)
-        [user pwd] (str/split (.getUserInfo uri) #":")
-        ds         (doto (PGSimpleDataSource.)
-                     (.setServerName (.getHost uri))
-                     (.setPortNumber (.getPort uri))
-                     (.setDatabaseName (.substring (.getPath uri) 1))
-                     (.setUser user)
-                     (.setPassword pwd))
-        init-sql   "SET application_name TO 'pubbler'"
-        config     (doto (HikariConfig.)
-                     (.setDataSource ds)
-                     (.setMaximumPoolSize 3)
-                     (.setConnectionTimeout 5000)
-                     (.setRegisterMbeans true)
-                     (.setConnectionInitSql init-sql)
-                     (.addDataSourceProperty "prepareThreshold" 0))]
-    (HikariDataSource. config)))
+        [user pwd] (str/split (.getUserInfo uri) #":")]
+    (doto (PGSimpleDataSource.)
+      (.setServerName (.getHost uri))
+      (.setPortNumber (.getPort uri))
+      (.setDatabaseName (.substring (.getPath uri) 1))
+      (.setUser user)
+      (.setPassword pwd)
+      (.setPrepareThreshold 0))))
 
 
 (mount/defstate conn
-  :start (make-pool (config/PGURL))
-  :stop (.close ^HikariDataSource conn))
+  :start (make-ds (config/PGURL)))
 
 
 (defn format-query [query]

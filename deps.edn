@@ -13,7 +13,6 @@
 
   seancorfield/next.jdbc    {:mvn/version "1.1.613"}
   org.postgresql/postgresql {:mvn/version "42.2.18"}
-  com.zaxxer/HikariCP       {:mvn/version "4.0.1"}
   honeysql/honeysql         {:mvn/version "1.0.444"}
   nilenso/honeysql-postgres {:mvn/version "0.2.6"}
 
