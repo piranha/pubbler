@@ -1,12 +1,15 @@
 (ns pubbler.bundle
   (:refer-clojure :exclude [read])
-  (:import [java.util.zip ZipFile]
+  (:import [java.util.zip ZipFile ZipEntry]
            [java.io File])
   (:require [clojure.java.io :as io]
             [ring.util.codec :as codec]
             [clojure.string :as str]
 
             [pubbler.core.time :as time]))
+
+
+(set! *warn-on-reflection* true)
 
 
 (def BEAR-DIV "\n---\n")
@@ -27,13 +30,13 @@
       (str/replace #"^\-|\-$" "")))
 
 
-(defn ensure-newline-eof [s]
+(defn ensure-newline-eof [^String s]
   (cond-> s
     (not= \newline (.charAt s (dec (count s))))
     (str \newline)))
 
 
-(defn parse-text [text]
+(defn parse-text [^String text]
   (let [title        (second (re-find #"^# (.*)" text))
         header-start (str/index-of text BEAR-DIV)
         header-end   (str/index-of text BEAR-DIV (inc header-start))
@@ -61,13 +64,13 @@
       (format "![](%s)" (codec/url-encode link)))))
 
 
-(defn determine-prefix [zip-file]
-  (let [entry (first (enumeration-seq (.entries zip-file)))
+(defn determine-prefix [^ZipFile zip-file]
+  (let [entry ^ZipEntry (first (enumeration-seq (.entries zip-file)))
         i     (str/index-of (.getName entry) "/")]
     (.substring (.getName entry) 0 (inc i))))
 
 
-(defn zip-entry [zip-file path]
+(defn zip-entry [^ZipFile zip-file ^String path]
   (let [entry    (.getEntry zip-file path)]
     (.getInputStream zip-file entry)))
 

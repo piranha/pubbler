@@ -12,6 +12,9 @@
             [pubbler.db :as db]))
 
 
+(set! *warn-on-reflection* true)
+
+
 (defn -req!
   "Inner function to make API calls in case you need more than just parsed
   response (i.e. status code etc)"

@@ -1,5 +1,6 @@
 (ns pubbler.auth
-  (:require [oauth.two :as oauth]
+  (:require [clojure.walk :as walk]
+            [oauth.two :as oauth]
             [org.httpkit.client :as http]
 
             [pubbler.config :as config]
@@ -7,6 +8,28 @@
             [pubbler.github :as github]
             [ring.util.codec :as codec]))
 
+
+(set! *warn-on-reflection* true)
+
+
+;;; Utils
+
+(defn map->b64 [state]
+  (when-let [enc (when (seq state)
+                   (codec/form-encode state))]
+    (codec/base64-encode
+      (.getBytes ^String enc "UTF-8"))))
+
+
+(defn b64->map [^String s]
+  (when s
+    (-> ^bytes (codec/base64-decode s)
+        (String. "UTF-8")
+        codec/form-decode
+        walk/keywordize-keys)))
+
+
+;;; OAuth
 
 (defn get-base-url []
   (str "https://" (config/DOMAIN)))
@@ -25,11 +48,8 @@
 
 
 (defn oauth-url [state]
-  (oauth/authorization-url (gh-client) {:state (when (seq state)
-                                                 (-> state
-                                                     codec/form-encode
-                                                     (.getBytes "UTF-8")
-                                                     codec/base64-encode))}))
+  (oauth/authorization-url (gh-client)
+    {:state (map->b64 state)}))
 
 
 (defn get-access-token! [client code]
@@ -40,10 +60,7 @@
       (get "access_token")))
 
 
-(defmacro with-user [user & body]
-  `(binding [github/*user* ~user]
-     ~@body))
-
+;;; Queries
 
 (defn get-user-q [id]
   {:from   [:users]
@@ -69,8 +86,15 @@
                  :do-update-set [:access_token :chat_id :telegram :updated_at]}})
 
 
+;;; API
+
+(defmacro with-user [user & body]
+  `(binding [github/*user* ~user]
+     ~@body))
+
+
 (defn store-user! [state]
-  (let [info (with-user state
+  (let [info (with-user {:access_token (:access_token state)}
                (github/req! :get "/user" nil))]
     (db/one (store-user-q info state))))
 

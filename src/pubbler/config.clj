@@ -2,6 +2,9 @@
   (:require [clojure.string :as str]))
 
 
+(set! *warn-on-reflection* true)
+
+
 (defn get-env [var-name msg]
   (or (some-> (System/getenv var-name) str/trim)
       (binding [*out* *err*]

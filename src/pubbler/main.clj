@@ -9,6 +9,7 @@
             [pubbler.httpd]))
 
 
+(set! *warn-on-reflection* true)
 (alter-var-root #'http/*default-client* (fn [_] sni-client/default-client))
 (log/conf! {:logger (log/->Stdout)})
 

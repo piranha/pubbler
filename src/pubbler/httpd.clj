@@ -1,6 +1,5 @@
 (ns pubbler.httpd
-  (:require [clojure.walk :as walk]
-            [better-cond.core :as b]
+  (:require [better-cond.core :as b]
             [mount.core :as mount]
             [org.httpkit.server :as httpd]
             [ring.util.codec :as codec]
@@ -10,17 +9,16 @@
             [pubbler.telegram :as telegram]))
 
 
+(set! *warn-on-reflection* true)
+
+
 ;;; HTTPd
 
 (defn gh-auth [{:keys [query-string]}]
   (b/cond
     :let [params (codec/form-decode query-string)
           code   (get params "code")
-          state  (some-> (get params "state")
-                   codec/base64-decode
-                   (String. "UTF-8")
-                   codec/form-decode
-                   walk/keywordize-keys)]
+          state  (auth/b64->map (get params "state"))]
 
     (nil? code)
     {:status 400

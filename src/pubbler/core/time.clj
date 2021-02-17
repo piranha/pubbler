@@ -3,7 +3,10 @@
            [java.time.format DateTimeFormatter]))
 
 
-(defn parse [s]
+(set! *warn-on-reflection* true)
+
+
+(defn parse [^String s]
   (LocalDate/parse s DateTimeFormatter/ISO_LOCAL_DATE))
 
 
@@ -11,6 +14,6 @@
   (LocalDate/now))
 
 
-(defn strftime [fmt t]
+(defn strftime [^String fmt t]
   (let [fmt (.replaceAll fmt "%([a-zA-Z])" "%1\\$t$1")]
     (format fmt t)))

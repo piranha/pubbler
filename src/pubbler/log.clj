@@ -3,6 +3,9 @@
   (:import [java.sql Timestamp]))
 
 
+(set! *warn-on-reflection* true)
+
+
 (def *logger
   "This should be a logger instance, do this at the start of the app:
 

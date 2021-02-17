@@ -5,7 +5,7 @@
             [next.jdbc.date-time :as jdbc-dt]
             [honeysql.core :as honeysql]
             [honeysql.format :as honeyfmt]
-            [honeysql-postgres.format]  ;; do not remove
+            [honeysql-postgres.format]
             [pubbler.config :as config]
             [clojure.string :as str])
   (:import [java.net URI]

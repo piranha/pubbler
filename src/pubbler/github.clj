@@ -12,6 +12,9 @@
   (:import [java.security MessageDigest]))
 
 
+(set! *warn-on-reflection* true)
+
+
 (def ^:dynamic *user*)
 (def sha1enc (MessageDigest/getInstance "SHA-1"))
 (def BLOB (.getBytes "blob "))
@@ -32,7 +35,9 @@
 
 
 (defn git-sha1 [ba]
-  (let [ba     (if (string? ba) (.getBytes ba) ba)
+  (let [ba     (if (string? ba)
+                 (.getBytes ^String ba "UTF-8")
+                 ba)
         target (byte-array (concat
                              BLOB
                              (.getBytes (str (count ba)))
@@ -76,7 +81,8 @@
 
 (defn update-file! [{:keys [tree path name content]}]
   (assert *user* "User context not set")
-  (let [glink    (<< "/repos/~(:github *user*)/~(:repo *user*)/contents/~{path}/~(codec/url-encode name)")
+  (let [url-name (codec/url-encode name)
+        glink    (<< "/repos/~(:github *user*)/~(:repo *user*)/contents/~{path}/~{url-name}")
         info     (first (filter #(= (:path %) name) tree))
         orig-sha (:sha info)]
     (log/info "file" {:target (join path name) :sha orig-sha})
@@ -111,20 +117,7 @@
          [link (update-file! {:tree    (:tree tree)
                               :path    path
                               :name    link
-                              :content (.getBytes (:text bundle) "UTF-8")})]))])
-  #_
-  (let [path        (join
-                      (time/strftime (:path *user*) (:date bundle))
-                      (:slug bundle))
-        updates     (for [{:keys [link file]} (:files bundle)
-                          :let                [link (join path link)]]
-                      (update-file! link (stream->bytes file)))
-        text-update (update-file!
-                      (join path "index.md")
-                      (.getBytes (:text bundle) "UTF-8"))]
-    [(str path "/")
-     (->> (cons text-update updates)
-          (filter identity))]))
+                              :content (.getBytes ^String (:text bundle) "UTF-8")})]))]))
 
 
 
