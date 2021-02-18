@@ -30,4 +30,5 @@ jobs:
         file: pubbler
         asset_name: pubbler-linux-amd64
         tag: ${{ github.ref }}
+        body: "Updated by [${{ github.sha }}](/piranha/pubbler/commit/${{ github.sha }})"
         overwrite: true
